@@ -1,4 +1,4 @@
-IMAGE_TAG=leader-election:latest
+IMAGE_TAG=leader-election:$(shell date +%Y%m%d%H%M%S)
 
 .PHONY: docker build
 build:

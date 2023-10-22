@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leader-election-nginx
+  namespace: leader-election
+  labels:
+    app: leader-election-nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: leader-election-nginx
+  template:
+    metadata:
+      labels:
+        app: leader-election-nginx
+    spec:
+      containers:
+      - name: leader-election
+        image: docker.io/library/leader-election:20231022163953
+        imagePullPolicy: Never
+        env:
+          - name: MEMBER_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: ELECTION_GROUP
+            value: "test-leader-election"
+          - name: LEASE_DURATION
+            value: "5"
+          - name: RENEWAL_DEADLINE
+            value: "2"
+          - name: RETRY_PERIOD
+            value: "1"
+      - name: nginx
+        image: nginx:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "${POD_NAME}" > /usr/share/nginx/html/index.html
+          nginx -g "daemon off;"
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        ports:
+        - containerPort: 80
